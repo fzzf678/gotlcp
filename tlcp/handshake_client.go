@@ -42,6 +42,15 @@ type clientHandshakeState struct {
 	peerCertificates []*x509.Certificate // 服务端证书，依次为签名证书、加密证书
 }
 
+func (hs *clientHandshakeState) cleanMidKeys() {
+	// set clientHello random to 0
+	hs.hello.random = make([]byte, 32)
+	// set serverHello random to 0
+	hs.serverHello.random = make([]byte, 32)
+	// set masterSecret to 0
+	hs.masterSecret = make([]byte, 48)
+}
+
 func (c *Conn) makeClientHello() (*clientHelloMsg, error) {
 	config := c.config
 
@@ -199,6 +208,7 @@ func (c *Conn) pickProtocolVersion(serverHello *serverHelloMsg) error {
 // Does the handshake, either a full one or resumes old session. Requires hs.c,
 // hs.hello, hs.serverHello, and, optionally, hs.session to be set.
 func (hs *clientHandshakeState) handshake() error {
+	defer hs.cleanMidKeys()
 	c := hs.c
 
 	isResume, err := hs.processServerHello()
@@ -390,6 +400,10 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 	}
 
 	preMasterSecret, ckx, err := keyAgreement.generateClientKeyExchange(hs)
+	// set preMasterSecret to 0 when return
+	defer func() {
+		preMasterSecret = make([]byte, 48)
+	}()
 	if err != nil {
 		_ = c.sendAlert(alertInternalError)
 		return err

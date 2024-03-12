@@ -48,6 +48,15 @@ type serverHandshakeState struct {
 	peerCertificates []*x509.Certificate // 客户端证书，可能为空
 }
 
+func (hs *serverHandshakeState) cleanMidKeys() {
+	// set clientHello random to 0
+	hs.clientHello.random = make([]byte, 32)
+	// set serverHello random to 0
+	hs.hello.random = make([]byte, 32)
+	// set masterSecret to 0
+	hs.masterSecret = make([]byte, 48)
+}
+
 // serverHandshake performs a TLCP handshake as a server.
 func (c *Conn) serverHandshake(ctx context.Context) error {
 	clientHello, err := c.readClientHello(ctx)
@@ -64,6 +73,7 @@ func (c *Conn) serverHandshake(ctx context.Context) error {
 }
 
 func (hs *serverHandshakeState) handshake() error {
+	defer hs.cleanMidKeys()
 	var err error
 	c := hs.c
 
@@ -490,6 +500,10 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 	}
 
 	preMasterSecret, err := keyAgreement.processClientKeyExchange(hs, ckx)
+	// set preMasterSecret to 0 when return
+	defer func() {
+		preMasterSecret = make([]byte, 48)
+	}()
 	if err != nil {
 		_ = c.sendAlert(alertHandshakeFailure)
 		return err

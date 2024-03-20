@@ -50,11 +50,17 @@ type serverHandshakeState struct {
 
 func (hs *serverHandshakeState) cleanMidKeys() {
 	// set clientHello random to 0
-	hs.clientHello.random = make([]byte, 32)
+	for _, i := range hs.clientHello.random {
+		hs.clientHello.random[i] = 0
+	}
 	// set serverHello random to 0
-	hs.hello.random = make([]byte, 32)
+	for _, i := range hs.hello.random {
+		hs.hello.random[i] = 0
+	}
 	// set masterSecret to 0
-	hs.masterSecret = make([]byte, 48)
+	for _, i := range hs.masterSecret {
+		hs.masterSecret[i] = 0
+	}
 }
 
 // serverHandshake performs a TLCP handshake as a server.
@@ -502,7 +508,9 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 	preMasterSecret, err := keyAgreement.processClientKeyExchange(hs, ckx)
 	// set preMasterSecret to 0 when return
 	defer func() {
-		preMasterSecret = make([]byte, 48)
+		for _, i := range preMasterSecret {
+			preMasterSecret[i] = 0
+		}
 	}()
 	if err != nil {
 		_ = c.sendAlert(alertHandshakeFailure)

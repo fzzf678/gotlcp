@@ -50,15 +50,15 @@ type serverHandshakeState struct {
 
 func (hs *serverHandshakeState) cleanMidKeys() {
 	// set clientHello random to 0
-	for _, i := range hs.clientHello.random {
+	for i := range hs.clientHello.random {
 		hs.clientHello.random[i] = 0
 	}
 	// set serverHello random to 0
-	for _, i := range hs.hello.random {
+	for i := range hs.hello.random {
 		hs.hello.random[i] = 0
 	}
 	// set masterSecret to 0
-	for _, i := range hs.masterSecret {
+	for i := range hs.masterSecret {
 		hs.masterSecret[i] = 0
 	}
 }

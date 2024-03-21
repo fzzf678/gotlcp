@@ -508,7 +508,7 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 	preMasterSecret, err := keyAgreement.processClientKeyExchange(hs, ckx)
 	// set preMasterSecret to 0 when return
 	defer func() {
-		for _, i := range preMasterSecret {
+		for i := range preMasterSecret {
 			preMasterSecret[i] = 0
 		}
 	}()
